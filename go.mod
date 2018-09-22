@@ -1,4 +1,4 @@
-module github.com/caldwell/docopt-unmarshall
+module github.com/caldwell/docopt-unmarshal
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

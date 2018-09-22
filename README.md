@@ -1,6 +1,6 @@
-# docopt-unmarshall
+# docopt-unmarshal
 
-Uses reflection to unmarshall [docopt's](https://github.com/docopt/docopt.go) output map into a native Go structure.
+Uses reflection to unmarshal [docopt's](https://github.com/docopt/docopt.go) output map into a native Go structure.
 
 # Example
 
@@ -9,7 +9,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/caldwell/docopt-unmarshall"
+	"github.com/caldwell/docopt-unmarshal"
 	"github.com/docopt/docopt-go"
 	"log"
 )
@@ -53,7 +53,7 @@ Options:
 	arguments, err := docopt.Parse(usage, nil, true, "Naval Fate 2.0", false)
         if err != nil { log.Fatal("docopt: ", err) }
 	var options Options
-	err = docopt_unmarshall.DocoptUnmarshall(arguments, &options)
+	err = docopt_unmarshal.DocoptUnmarshal(arguments, &options)
         if err != nil { log.Fatal("options: ", err) }
 	fmt.Printf("%#v\n", options)
 }

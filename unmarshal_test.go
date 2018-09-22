@@ -1,4 +1,4 @@
-package docopt_unmarshall
+package docopt_unmarshal
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -68,8 +68,8 @@ func parse_unmarshal_assert(t *T, name string, doc string, argv []string, struct
 	t.Run(name, func(t *T) {
 		arguments, err := docopt.ParseArgs(doc, argv, "Naval Fate 2.0")
 		assert.Nil(t, err, `Docopt Parse`)
-		err = DocoptUnmarshall(arguments, structure)
-		assert.Nil(t, err, `DocoptUnmarshall`)
+		err = DocoptUnmarshal(arguments, structure)
+		assert.Nil(t, err, `DocoptUnmarshal`)
 		assert.Equal(t, structure, assertion, strings.Join(argv, " "))
 	})
 }

@@ -1,4 +1,4 @@
-package docopt_unmarshall
+package docopt_unmarshal
 
 import (
 	"errors"
@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-func DocoptUnmarshall(arguments map[string]interface{}, options interface{}) error {
+func DocoptUnmarshal(arguments map[string]interface{}, options interface{}) error {
        var seen []string
-       seen, err := docopt_unmarshall(arguments, options, seen)
+       seen, err := docopt_unmarshal(arguments, options, seen)
        if err != nil { return err }
        for _, a := range seen {
                delete(arguments, a)
@@ -20,7 +20,7 @@ func DocoptUnmarshall(arguments map[string]interface{}, options interface{}) err
        }
        return nil
 }
-func docopt_unmarshall(arguments map[string]interface{}, options interface{}, seen []string) ([]string, error) {
+func docopt_unmarshal(arguments map[string]interface{}, options interface{}, seen []string) ([]string, error) {
        val := reflect.ValueOf(options).Elem()
        typ := val.Type()
        for i:=0; i<val.NumField(); i++ {
@@ -68,7 +68,7 @@ func docopt_unmarshall(arguments map[string]interface{}, options interface{}, se
                }
                if f_val.Type().Kind() == reflect.Struct {
                        var err error
-                       if seen, err = docopt_unmarshall(arguments, f_val.Addr().Interface(), seen); err != nil {
+                       if seen, err = docopt_unmarshal(arguments, f_val.Addr().Interface(), seen); err != nil {
                                return seen, err
                        }
                }
