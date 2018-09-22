@@ -16,6 +16,15 @@ type Unmarshaller struct {
 
 func New() *Unmarshaller {
 	um := &Unmarshaller{hook: map[string]Hook{}}
+	um.AddHooks(map[string]Hook{
+		"time.Duration": func(f_val reflect.Value, arg string) error {
+			dv, err := time.ParseDuration(arg)
+			if err == nil {
+				f_val.Set(reflect.ValueOf(dv))
+			}
+			return err
+		},
+	})
 	return um
 }
 
@@ -71,19 +80,11 @@ func (um *Unmarshaller) docopt_unmarshal(arguments map[string]interface{}, optio
 					case reflect.Bool:
 						f_val.SetBool(a != nil)
 					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-						if f_typ.Type.String() == "time.Duration" {
-							dv, err := time.ParseDuration(a.(string))
-							if err != nil {
-								return seen, errors.New(fmt.Sprintf("%s: %s", flag, err))
-							}
-							f_val.Set(reflect.ValueOf(dv))
-						} else {
-							iv, err := strconv.ParseInt(a.(string), 10, 64)
-							if err != nil {
-								return seen, errors.New(fmt.Sprintf("%s: %s", flag, err))
-							}
-							f_val.SetInt(iv)
+						iv, err := strconv.ParseInt(a.(string), 10, 64)
+						if err != nil {
+							return seen, errors.New(fmt.Sprintf("%s: %s", flag, err))
 						}
+						f_val.SetInt(iv)
 					case reflect.Float32, reflect.Float64:
 						fv, err := strconv.ParseFloat(a.(string), 64)
 						if err != nil {
