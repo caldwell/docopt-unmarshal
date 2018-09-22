@@ -3,6 +3,7 @@ package docopt_unmarshal
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strconv"
 	"time"
@@ -19,6 +20,13 @@ func New() *Unmarshaller {
 	um.AddHooks(map[string]Hook{
 		"time.Duration": func(f_val reflect.Value, arg string) error {
 			dv, err := time.ParseDuration(arg)
+			if err == nil {
+				f_val.Set(reflect.ValueOf(dv))
+			}
+			return err
+		},
+		"*url.URL": func(f_val reflect.Value, arg string) error {
+			dv, err := url.Parse(arg)
 			if err == nil {
 				f_val.Set(reflect.ValueOf(dv))
 			}

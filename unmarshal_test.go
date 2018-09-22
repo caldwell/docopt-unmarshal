@@ -8,6 +8,7 @@ import (
 	"strings"
 	. "testing"
 	"time"
+	"net/url"
 )
 
 func TestBasics(t *T) {
@@ -88,6 +89,15 @@ func TestTypeHook(t *T) {
 			return nil
 		},
 	})
+}
+
+func TestURL(t *T) {
+	type Opts struct {
+		Url *url.URL `docopt:"<url>"`
+	}
+	u := "http://example.com/a/path"
+	up, _ := url.Parse(u)
+	parse_unmarshal_hook_assert(t, "type hook", `Usage: test <url>`, []string{u}, &Opts{}, &Opts{up}, nil)
 }
 
 
