@@ -44,9 +44,9 @@ Options:
   --drifting    Drifting mine.`
 
 	arguments, err := docopt.Parse(usage, nil, true, "Naval Fate 2.0", false)
-        if err != nil { log.Fatal("docopt: ", err) }
+	if err != nil { log.Fatal("docopt: ", err) }
 	var options Options
 	err = docopt_unmarshal.DocoptUnmarshal(arguments, &options)
-        if err != nil { log.Fatal("options: ", err) }
+	if err != nil { log.Fatal("options: ", err) }
 	fmt.Printf("%#v\n", options)
 }
