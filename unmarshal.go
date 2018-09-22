@@ -8,9 +8,36 @@ import (
 	"time"
 )
 
+type Hook func(reflect.Value, string)error
+
+type Unmarshaller struct {
+	hook map[string]Hook
+}
+
+func New() *Unmarshaller {
+	um := &Unmarshaller{hook: map[string]Hook{}}
+	return um
+}
+
+var DefaultUnmarshaller *Unmarshaller = New()
+
 func DocoptUnmarshal(arguments map[string]interface{}, options interface{}) error {
+	return DefaultUnmarshaller.Unmarshal(arguments, options)
+}
+
+func (um *Unmarshaller) AddHook(type_string string, new_hook Hook) {
+	um.hook[type_string] = new_hook
+}
+
+func (um *Unmarshaller) AddHooks(new_hooks map[string]Hook) {
+	for k,v := range(new_hooks) {
+		um.AddHook(k,v)
+	}
+}
+
+func (um *Unmarshaller) Unmarshal(arguments map[string]interface{}, options interface{}) error {
 	var seen []string
-	seen, err := docopt_unmarshal(arguments, options, seen)
+	seen, err := um.docopt_unmarshal(arguments, options, seen)
 	if err != nil { return err }
 	for _, a := range seen {
 		delete(arguments, a)
@@ -20,7 +47,8 @@ func DocoptUnmarshal(arguments map[string]interface{}, options interface{}) erro
 	}
 	return nil
 }
-func docopt_unmarshal(arguments map[string]interface{}, options interface{}, seen []string) ([]string, error) {
+
+func (um *Unmarshaller) docopt_unmarshal(arguments map[string]interface{}, options interface{}, seen []string) ([]string, error) {
 	val := reflect.ValueOf(options).Elem()
 	typ := val.Type()
 	for i:=0; i<val.NumField(); i++ {
@@ -34,6 +62,11 @@ func docopt_unmarshal(arguments map[string]interface{}, options interface{}, see
 			} else if a != nil {
 				a_typ := reflect.TypeOf(a)
 				if a_typ.Kind() == reflect.String {
+				    if hook, exists := um.hook[f_typ.Type.String()]; exists {
+						if err := hook(f_val, a.(string)); err != nil {
+							return seen, errors.New(fmt.Sprintf("%s: %s", flag, err))
+						}
+				    } else {
 					switch f_typ.Type.Kind() {
 					case reflect.Bool:
 						f_val.SetBool(a != nil)
@@ -60,6 +93,7 @@ func docopt_unmarshal(arguments map[string]interface{}, options interface{}, see
 					default:
 						f_val.Set(reflect.ValueOf(a))
 					}
+				    }
 				} else {
 					f_val.Set(reflect.ValueOf(a))
 				}
@@ -68,7 +102,7 @@ func docopt_unmarshal(arguments map[string]interface{}, options interface{}, see
 		}
 		if f_val.Type().Kind() == reflect.Struct {
 			var err error
-			if seen, err = docopt_unmarshal(arguments, f_val.Addr().Interface(), seen); err != nil {
+			if seen, err = um.docopt_unmarshal(arguments, f_val.Addr().Interface(), seen); err != nil {
 				return seen, err
 			}
 		}

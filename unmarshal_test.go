@@ -3,6 +3,8 @@ package docopt_unmarshal
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/docopt/docopt-go"
+	"reflect"
+	"strconv"
 	"strings"
 	. "testing"
 	"time"
@@ -64,11 +66,48 @@ func TestNestedStructs(t *T) {
 	parse_unmarshal_assert(t, "nested structs", `Usage: test x <y> <z> <p>`, []string{"x", "27", "Hello", "2.718"}, &Opts{}, &Opts{A:A{B:B{C:C{X:true},Y:27},Z:"Hello"},P:2.718})
 }
 
+func TestComplicatedAPI(t *T) {
+	type Opts struct {
+		Duration time.Duration `docopt:"<duration>"`
+		Float float32 `docopt:"<float>"`
+	}
+	parse_unmarshal_hook_assert(t, "duration+float", `Usage: test <duration> <float>`, []string{"20s", "3.14"}, &Opts{}, &Opts{20*time.Second, 3.14}, nil)
+}
+
+func TestTypeHook(t *T) {
+	type Negative int
+	type Opts struct {
+		Negative Negative `docopt:"<int>"`
+	}
+	parse_unmarshal_hook_assert(t, "type hook", `Usage: test <int>`, []string{"10"}, &Opts{}, &Opts{-10}, map[string]Hook{
+		"docopt_unmarshal.Negative": func(f_val reflect.Value, arg string) error {
+			iv, err := strconv.ParseInt(arg, 10, 64)
+			if err == nil {
+				f_val.SetInt(-iv)
+			}
+			return nil
+		},
+	})
+}
+
+
 func parse_unmarshal_assert(t *T, name string, doc string, argv []string, structure interface{}, assertion interface{}) {
 	t.Run(name, func(t *T) {
 		arguments, err := docopt.ParseArgs(doc, argv, "Naval Fate 2.0")
 		assert.Nil(t, err, `Docopt Parse`)
 		err = DocoptUnmarshal(arguments, structure)
+		assert.Nil(t, err, `DocoptUnmarshal`)
+		assert.Equal(t, structure, assertion, strings.Join(argv, " "))
+	})
+}
+
+func parse_unmarshal_hook_assert(t *T, name string, doc string, argv []string, structure interface{}, assertion interface{}, hooks map[string]Hook) {
+	t.Run(name, func(t *T) {
+		arguments, err := docopt.ParseArgs(doc, argv, "Naval Fate 2.0")
+		assert.Nil(t, err, `Docopt Parse`)
+		um := New()
+		um.AddHooks(hooks)
+		err = um.Unmarshal(arguments, structure)
 		assert.Nil(t, err, `DocoptUnmarshal`)
 		assert.Equal(t, structure, assertion, strings.Join(argv, " "))
 	})
